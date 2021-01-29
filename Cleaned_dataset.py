@@ -67,3 +67,65 @@ Also, the column country_code will be used for country-wise analysis, and catego
 
 Let's first see how we can deal with missing values in raised_amount_usd.
 """
+
+# summary stats of raised_amount_usd
+print(master['raised_amount_usd'].describe())
+
+"""
+The mean is somewhere around USD 10 million, while the median is only about USD 1m. The min and max values are also miles apart.
+
+In general, since there is a huge spread in the funding amounts, it will be inappropriate to impute it with a metric such as median or mean. Also, since we have quite a large number of observations, it is wiser to just drop the rows.
+
+Let's thus remove the rows having NaNs in raised_amount_usd.
+"""
+
+# removing NaNs in raised_amount_usd
+master = master[~np.isnan(master['raised_amount_usd'])]
+print(round(100*(master.isnull().sum()/len(master.index)), 2))
+
+# Let's now look at the column country_code. To see the distribution of the values for categorical variables, ' \
+# it is best to convert them into type 'category'.
+
+country_codes = master['country_code'].astype('category')
+print(country_codes)
+# displaying frequencies of each category
+print(country_codes.value_counts())
+
+"""
+By far, the most number of investments have happened in American countries. 
+We can also see the fractions.
+"""
+# viewing fractions of counts of country_codes
+print(100*(master['country_code'].value_counts()/len(master.index)))
+
+"""
+Now, we can either delete the rows having country_code missing (about 6% rows), or we can impute them by USA. Since the number 6 is quite small, and we have a decent amount of data, it may be better to just remove the rows.
+
+Note that np.isnan does not work with arrays of type 'object', it only works with native numpy type (float). Thus, you can use pd.isnull() instead.
+
+"""
+
+# removing rows with missing country_codes
+master = master[~pd.isnull(master['country_code'])]
+
+# look at missing values
+round(100*(master.isnull().sum()/len(master.index)), 2)
+
+"""
+Note that the fraction of missing values in the remaining dataframe has also reduced now - only 0.65% in category_list. Let's thus remove those as well.
+Note Optionally, you could have simply let the missing values in the dataset and continued the analysis. There is nothing wrong with that. But in this case, since we will use that column later for merging with the 'main_categories', removing the missing values will be quite convenient (and again - we have enough data).
+"""
+
+# removing rows with missing category_list values
+master = master[~pd.isnull(master['category_list'])]
+# look at missing values
+print(round(100*(master.isnull().sum()/len(master.index)), 2))
+
+# writing the clean dataframe to an another file
+master.to_csv("master_df.csv", sep=',', index=False)
+
+# look at the master df info for number of rows etc.
+master.info()
+
+# after missing value treatment, approx 77% observations are retained
+100*(len(master.index) / len(rounds.index))
